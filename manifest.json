@@ -1,0 +1,11 @@
+{
+  "id": "obsidian-post",
+  "name": "Obsidian Post",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "SNS-style posting plugin for Obsidian",
+  "author": "",
+  "authorUrl": "",
+  "fundingUrl": "",
+  "isDesktopOnly": false
+}
