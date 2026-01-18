@@ -1,34 +1,7 @@
-"use strict";
-//#region rolldown:runtime
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
-		key = keys[i];
-		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-			get: ((k) => from[k]).bind(null, key),
-			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-		});
-	}
-	return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-	value: mod,
-	enumerable: true
-}) : target, mod));
-
-//#endregion
-const obsidian = __toESM(require("obsidian"));
+let obsidian = require("obsidian");
 
 //#region src/components/PostInput.ts
 var PostInput = class {
-	plugin;
-	container;
-	onPostCreated;
 	constructor(plugin, container, onPostCreated) {
 		this.plugin = plugin;
 		this.container = container;
@@ -42,12 +15,10 @@ var PostInput = class {
 			placeholder: "What's on your mind?",
 			style: "width: 100%; height: 100px; padding: 8px; font-family: inherit; border: 1px solid var(--color-base-30); border-radius: 4px; resize: none;"
 		} });
-		const buttonContainer = inputContainer.createEl("div", { attr: { style: "display: flex; gap: 8px; margin-top: 8px;" } });
-		const postButton = buttonContainer.createEl("button", {
+		inputContainer.createEl("div", { attr: { style: "display: flex; gap: 8px; margin-top: 8px;" } }).createEl("button", {
 			text: "Post",
 			attr: { style: "flex: 1; padding: 8px; cursor: pointer;" }
-		});
-		postButton.addEventListener("click", async () => {
+		}).addEventListener("click", async () => {
 			const content = textarea.value.trim();
 			if (content) {
 				await this.plugin.createPost(content);
@@ -81,15 +52,14 @@ const henkan = Intl.DateTimeFormat(void 0, {
 	second: "2-digit"
 });
 var PostView = class extends obsidian.ItemView {
-	plugin;
-	postInput = null;
-	postsContainer = null;
-	loadedPosts = 0;
-	postsPerPage = 20;
-	isLoading = false;
-	hasMorePosts = true;
 	constructor(leaf, plugin) {
 		super(leaf);
+		this.postInput = null;
+		this.postsContainer = null;
+		this.loadedPosts = 0;
+		this.postsPerPage = 20;
+		this.isLoading = false;
+		this.hasMorePosts = true;
 		this.plugin = plugin;
 	}
 	getViewType() {
@@ -105,8 +75,7 @@ var PostView = class extends obsidian.ItemView {
 	async refreshPosts() {
 		const container = this.contentEl;
 		container.empty();
-		const header = container.createEl("div", { attr: { style: "border-bottom: 1px solid var(--color-base-30);" } });
-		header.createEl("h2", {
+		container.createEl("div", { attr: { style: "border-bottom: 1px solid var(--color-base-30);" } }).createEl("h2", {
 			text: "Posts",
 			attr: { style: "padding: 12px; margin: 0;" }
 		});
@@ -160,11 +129,10 @@ var PostView = class extends obsidian.ItemView {
 				attr: { style: "font-weight: bold; color: var(--text-muted); font-size: 0.9em;" },
 				text: henkan.format(new Date(post.timestamp))
 			});
-			const deleteBtn = headerDiv.createEl("button", {
+			headerDiv.createEl("button", {
 				text: "✕",
 				attr: { style: "background-color: var(--color-base-25); border: none; color: var(--text-normal); cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 0.9em;" }
-			});
-			deleteBtn.addEventListener("click", async (e) => {
+			}).addEventListener("click", async (e) => {
 				e.stopPropagation();
 				if (confirm("この投稿を削除しますか？")) {
 					await this.plugin.deletePost(post.path, post.timestamp);
@@ -187,7 +155,6 @@ var PostView = class extends obsidian.ItemView {
 //#region src/main.ts
 const DEFAULT_SETTINGS = { postDirectory: "post" };
 var ObsidianPostPlugin = class extends obsidian.Plugin {
-	settings;
 	async onload() {
 		await this.loadSettings();
 		this.registerView(VIEW_TYPE_POST, (leaf) => new PostView(leaf, this));
@@ -236,13 +203,12 @@ var ObsidianPostPlugin = class extends obsidian.Plugin {
 	}
 	async createPost(content) {
 		try {
-			const now = new Date();
+			const now = /* @__PURE__ */ new Date();
 			const timestamp = now.toISOString();
 			const dirPath = `${this.settings.postDirectory}/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}`;
 			const dir = this.app.vault.getAbstractFileByPath(dirPath);
 			if (!dir || !(dir instanceof obsidian.TFolder)) await this.app.vault.createFolder(dirPath).catch(() => {});
-			const fileName = `${String(now.getDate()).padStart(2, "0")}.md`;
-			const filePath = `${dirPath}/${fileName}`;
+			const filePath = `${dirPath}/${`${String(now.getDate()).padStart(2, "0")}.md`}`;
 			const existingFile = this.app.vault.getAbstractFileByPath(filePath);
 			let existingContent = "";
 			if (existingFile && existingFile instanceof obsidian.TFile) existingContent = await this.app.vault.adapter.read(filePath);
@@ -272,8 +238,7 @@ var ObsidianPostPlugin = class extends obsidian.Plugin {
 		let postsSkipped = 0;
 		for (const filePath of markdownFiles) {
 			if (limit && posts.length >= limit) break;
-			const content = await this.app.vault.adapter.read(filePath);
-			const entries = content.split("---").map((s) => s.trim()).filter((s) => s);
+			const entries = (await this.app.vault.adapter.read(filePath)).split("---").map((s) => s.trim()).filter((s) => s);
 			const filePosts = [];
 			for (const entry of entries) {
 				const lines = entry.split("\n");
@@ -304,14 +269,12 @@ var ObsidianPostPlugin = class extends obsidian.Plugin {
 		try {
 			const file = this.app.vault.getAbstractFileByPath(filePath);
 			if (!file || !(file instanceof obsidian.TFile)) return false;
-			const content = await this.app.vault.adapter.read(filePath);
-			const entries = content.split("---").map((s) => s.trim()).filter((s) => s);
+			const entries = (await this.app.vault.adapter.read(filePath)).split("---").map((s) => s.trim()).filter((s) => s);
 			const newEntries = [];
 			for (const entry of entries) {
 				const lines = entry.split("\n");
 				if (lines.length >= 2) {
-					const entryTimestamp = lines[0];
-					if (entryTimestamp !== timestamp) newEntries.push(entry);
+					if (lines[0] !== timestamp) newEntries.push(entry);
 				}
 			}
 			if (newEntries.length === 0) await this.app.vault.delete(file);
@@ -327,7 +290,6 @@ var ObsidianPostPlugin = class extends obsidian.Plugin {
 	}
 };
 var ObsidianPostSettingTab = class extends obsidian.PluginSettingTab {
-	plugin;
 	constructor(app, plugin) {
 		super(app, plugin);
 		this.plugin = plugin;
